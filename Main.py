@@ -1,29 +1,6 @@
 import json
 
-# FUNCIONES PARA UTILIZAR MÁQUINA
-def tape_initialization(blanc, input_string):
-    tape = [blanc, blanc]
-    tape.extend(list(input_string))
-    tape.extend([blanc, blanc])
-    return tape
-
-def derivation(blanc, initial_state, acceptance_state, delta, tape):
-    print("Ejecutando secuencia...")
-    delta = delta #transiciones de la máquina
-    state = initial_state
-    index = 2 #punto de inicio de la cinta
-    char_tape = tape[index] #caracter leido actualmente en la cinta
-
-    while not (state == acceptance_state and char_tape == blanc):
-        changes = delta_transitions(state, char_tape, delta)
-        state = changes[0]
-        tape[index] = changes[1]
-        index += int(changes[2])
-        char_tape = tape[index]
-    
-    tape_result = "".join(tape)
-    return tape_result.replace(blanc, "")
-
+# Función para encontrar los cambios en la cinta de la máquina
 def delta_transitions(state, char_input, delta):
     key_value = f"{state}, {char_input}"
     changes = delta.get(key_value, []).copy()
@@ -42,7 +19,7 @@ def delta_transitions(state, char_input, delta):
     return changes
 
 # EJECUCION PRINCIPAL
-print("Bienveido al simulador de máquina de turing")
+print("Bienvenido al simulador de máquina de turing")
 
 print("\nLeyendo información de la máquina")
 
@@ -59,6 +36,24 @@ Blanc = data["Blanc"] #Símbolo blanco
 delta = data["delta"] #Lista de transiciones //'estado, lectura': [transicion, input, movimiento]
 tapeInput = data["tapeInput"] #Input inicial en cadena
 
-tape = tape_initialization(Blanc, tapeInput)
-result = derivation(Blanc, q0, F, delta, tape)
-print(f"Resultado en la cinta: {result}")
+# FUNCIONAMIENTO DE MÁQUINA
+tape = [Blanc, Blanc]
+tape.extend(list(tapeInput))
+tape.extend([Blanc, Blanc])
+
+print("\nEjecutando máquina...\n")
+state = q0
+index = 2 #punto de inicio de la cinta
+char_tape = tape[index] #caracter leido actualmente en la cinta
+
+while not (state == F and char_tape == Blanc):
+    changes = delta_transitions(state, char_tape, delta)
+    state = changes[0]
+    tape[index] = changes[1]
+    index += int(changes[2])
+    char_tape = tape[index]
+
+tape_result = "".join(tape)
+result = tape_result.replace(Blanc, "")
+
+print(f"Resultado en la cinta: {result}\n")
