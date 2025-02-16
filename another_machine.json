@@ -1,0 +1,14 @@
+{
+    "states": ["q0", "q1"],
+    "alphabet": ["0", "1"],
+    "tapeAlphabet": ["0", "1", "X", "Y", "_"],
+    "initialState": "q0",
+    "finalState": "q1",
+    "Blanc": "_",
+    "delta": {
+        "q0, 0": ["q0", "X", "R"],
+        "q0, 1": ["q0", "Y", "R"],
+        "q0, _": ["q1", "_", "S"]
+    },
+    "tapeInput": "0011"
+}
