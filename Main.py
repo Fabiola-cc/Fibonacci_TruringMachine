@@ -38,7 +38,8 @@ print("\nLeyendo información de la máquina")
 # FUNCIONAMIENTO DE MÁQUINA
 tape = [Blanc, Blanc]
 
-if machine_file == "Fibonacci_machine.json":
+using_fibonacci = machine_file == "Fibonacci_machine.json"
+if using_fibonacci:
     print("Hemos reconocido que estas ejecutando la máquina de fibonacci.")
     print("Ingresa el valor n (cantidad de veces que se ejecutará la secuencia):")
     n = int(input("n = "))
@@ -66,3 +67,9 @@ tape_result = "".join(tape)
 result = tape_result.replace(Blanc, "")
 
 print(f"Resultado en la cinta: {result}\n")
+
+if using_fibonacci:
+    valores = result.split("X")[:-1]  # Ignorar el último elemento vacío
+    print("Secuencia Fibonacci: " + " ".join(str(valor.count("1")) for valor in valores))
+
+
