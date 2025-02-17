@@ -23,8 +23,9 @@ print("Bienvenido al simulador de máquina de turing")
 
 print("\nLeyendo información de la máquina")
 
+machine_file = "Fibonacci_machine.json"
 # Abrir y leer el archivo JSON
-with open("another_machine.json", "r", encoding="utf-8") as file:
+with open(machine_file, "r", encoding="utf-8") as file:
     data = json.load(file)  # Carga el contenido del archivo como un diccionario
 
 Q = data["states"] #Estados
@@ -38,6 +39,14 @@ tapeInput = data["tapeInput"] #Input inicial en cadena
 
 # FUNCIONAMIENTO DE MÁQUINA
 tape = [Blanc, Blanc]
+
+if machine_file == "Fibonacci_machine.json":
+    print("Hemos reconocido que estas ejecutando la máquina de fibonacci.")
+    print("Ingresa el valor n (cantidad de veces que se ejecutará la secuencia):")
+    n = int(input("n = "))
+    ejecucion = "A" * n
+    tape.extend(list(ejecucion))
+    
 tape.extend(list(tapeInput))
 tape.extend([Blanc, Blanc])
 
