@@ -1,95 +1,120 @@
-import numpy as np
-import time
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+# Importación de librerías necesarias
+import json  # Para cargar datos JSON
+import time  # Para medir tiempos de ejecución
+import numpy as np  # Para operaciones numéricas
 
-# [Código a ejecutar]
-def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n - i - 1):
-            if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-    return arr
-
-# [Pruebas a realizar]
-def measure_time(func, input_size):
-    # Crear array aleatorio
-    arr = np.random.randint(0, 1000, size=input_size)
+def delta_transitions(state, char_input, delta):
+    """
+    Calcula la transición de estado según la función delta de la máquina de Turing
     
-    # Medir tiempo de ejecución
+    Args:
+        state: Estado actual de la máquina
+        char_input: Carácter actual en la cinta
+        delta: Diccionario de transiciones
+    
+    Returns:
+        Lista con el nuevo estado, símbolo a escribir y dirección del movimiento
+    """
+    key_value = f"{state}, {char_input}"
+    changes = delta.get(key_value, []).copy()
+    
+    if len(changes) == 0:
+        return changes
+
+    # Convierte las direcciones simbólicas (S,R,L) a valores numéricos (0,1,-1)
+    if changes[2] == "S":
+        changes[2] = "0"  # Stay (no moverse)
+    elif changes[2] == "R":
+        changes[2] = "1"  # Right (mover derecha)
+    elif changes[2] == "L":
+        changes[2] = "-1"  # Left (mover izquierda)
+    
+    return changes
+
+def run_fibonacci_machine(n, machine_data):
+    """
+    Ejecuta la máquina de Turing que genera la secuencia de Fibonacci
+    
+    Args:
+        n: Número de términos de Fibonacci a generar
+        machine_data: Diccionario con la configuración de la máquina
+    
+    Returns:
+        Lista con la secuencia de Fibonacci generada
+    """
+    # Extracción de los componentes de la máquina
+    Q = machine_data["states"]  # Conjunto de estados
+    sigma = machine_data["alphabet"]  # Alfabeto de entrada
+    gamma = machine_data["tapeAlphabet"]  # Alfabeto de la cinta
+    q0 = machine_data["initialState"]  # Estado inicial
+    F = machine_data["finalState"]  # Estado final
+    Blanc = machine_data["Blanc"]  # Símbolo blanco
+    delta = machine_data["delta"]  # Función de transición
+    tapeInput = machine_data["tapeInput"]  # Entrada inicial en la cinta
+
+    # Inicialización de la cinta
+    tape = [Blanc, Blanc]
+    ejecucion = "A" * n  # Genera la cadena de entrada según n
+    tape.extend(list(ejecucion))
+    tape.extend(list(tapeInput))
+    tape.extend([Blanc, Blanc])
+
+    # Configuración inicial
+    state = q0
+    index = 2  # Posición inicial del cabezal
+    char_tape = tape[index]
+
+    # Bucle principal de ejecución
+    while not (state == F and char_tape == Blanc):
+        changes = delta_transitions(state, char_tape, delta)
+        if not changes:  # Si no hay transición definida, terminar
+            break
+        # Actualizar estado y cinta
+        state = changes[0]
+        tape[index] = changes[1]
+        index += int(changes[2])
+        # Extender la cinta si es necesario
+        if index == len(tape) - 1:
+            tape.extend([Blanc])
+        char_tape = tape[index]
+
+    # Procesar resultado
+    tape_result = "".join(tape)
+    result = tape_result.replace(Blanc, "")
+    valores = result.split("X")[:-1]
+    fibonacci_sequence = [valor.count("1") for valor in valores]
+    return fibonacci_sequence
+
+def measure_execution_time(n, machine_data):
+    """
+    Mide el tiempo de ejecución de la máquina de Fibonacci
+    
+    Args:
+        n: Número de términos a generar
+        machine_data: Configuración de la máquina
+    
+    Returns:
+        Tupla con (tiempo_ejecución, secuencia_fibonacci)
+    """
     start_time = time.time()
-    func(arr.copy())  # Usamos copy para no modificar el array original
+    fibonacci_sequence = run_fibonacci_machine(n, machine_data)
     end_time = time.time()
-    
-    return end_time - start_time
+    return end_time - start_time, fibonacci_sequence
 
-# Tamaños de entrada para pruebas
-input_sizes = np.linspace(100, 2000, 20, dtype=int)
+# Bloque principal de ejecución
+# Cargar la configuración de la máquina desde archivo JSON
+with open("Fibonacci_machine.json", "r", encoding="utf-8") as file:
+    machine_data = json.load(file)
+
+# Configuración de pruebas
+input_sizes = np.arange(1,18)  # Probar con n del 1 al 10
 execution_times = []
+fibonacci_results = []
 
-# Realizar mediciones
-for size in input_sizes:
-    time_taken = measure_time(bubble_sort, size)
+print("Realizando mediciones iniciales...")
+# Ejecutar pruebas para diferentes valores de n
+for n in input_sizes:
+    time_taken, fib_sequence = measure_execution_time(n, machine_data)
     execution_times.append(time_taken)
-
-# [Análisis]
-# Convertir a arrays de numpy para el análisis
-X = input_sizes.reshape(-1, 1)
-y = np.array(execution_times)
-
-# Crear el modelo de regresión polinomial
-degrees = [1, 2, 3]  # Probaremos diferentes grados
-best_degree = 1
-best_r2 = 0
-
-for degree in degrees:
-    poly_features = PolynomialFeatures(degree=degree)
-    X_poly = poly_features.fit_transform(X)
-    
-    model = LinearRegression()
-    model.fit(X_poly, y)
-    
-    y_pred = model.predict(X_poly)
-    r2 = r2_score(y, y_pred)
-    
-    if r2 > best_r2:
-        best_degree = degree
-        best_r2 = r2
-        best_model = model
-        best_poly_features = poly_features
-
-# [Diagrama de dispersión y regresión]
-plt.figure(figsize=(10, 6))
-plt.scatter(input_sizes, execution_times, color='blue', label='Datos medidos')
-
-# Generar puntos para la línea de regresión
-X_continuous = np.linspace(min(input_sizes), max(input_sizes), 100).reshape(-1, 1)
-X_continuous_poly = best_poly_features.transform(X_continuous)
-y_continuous = best_model.predict(X_continuous_poly)
-
-plt.plot(X_continuous, y_continuous, color='red', 
-         label=f'Regresión polinomial (grado {best_degree})')
-
-plt.xlabel('Tamaño de entrada (n)')
-plt.ylabel('Tiempo de ejecución (segundos)')
-plt.title('Análisis de Complejidad: Bubble Sort')
-plt.legend()
-plt.grid(True)
-
-# Guardar el gráfico
-plt.savefig('./complexity_analysis.png')
-
-# Imprimir resultados del análisis
-print(f"\nResultados del análisis:")
-print(f"Mejor grado polinomial: {best_degree}")
-print(f"R² Score: {best_r2:.4f}")
-
-if best_degree == 2:
-    print("El análisis sugiere una complejidad O(n²)")
-elif best_degree == 3:
-    print("El análisis sugiere una complejidad O(n³)")
-else:
-    print(f"El análisis sugiere una complejidad O(n^{best_degree})")
+    fibonacci_results.append(fib_sequence)
+    print(f"n = {n}: {time_taken:.4f} segundos, Fibonacci: {fib_sequence}")
