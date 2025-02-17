@@ -2,6 +2,7 @@
 import json  # Para cargar datos JSON
 import time  # Para medir tiempos de ejecución
 import numpy as np  # Para operaciones numéricas
+import matplotlib.pyplot as plt
 
 def delta_transitions(state, char_input, delta):
     """
@@ -118,3 +119,117 @@ for n in input_sizes:
     execution_times.append(time_taken)
     fibonacci_results.append(fib_sequence)
     print(f"n = {n}: {time_taken:.4f} segundos, Fibonacci: {fib_sequence}")
+
+
+# [Análisis y Visualización]
+plt.figure(figsize=(12, 6))
+
+# Gráfico de dispersión
+plt.subplot(1, 2, 1)
+plt.scatter(input_sizes, execution_times, color='blue', label='Tiempos medidos')
+
+# Ajuste polinomial
+degrees = [1, 2, 3]  # Probar diferentes grados
+best_r2 = -1
+best_degree = 1
+best_coeffs = None
+
+for degree in degrees:
+    coeffs = np.polyfit(input_sizes, execution_times, degree)
+    poly = np.poly1d(coeffs)
+    y_pred = poly(input_sizes)
+    r2 = 1 - (np.sum((execution_times - y_pred) ** 2) / 
+              np.sum((execution_times - np.mean(execution_times)) ** 2))
+    
+    if r2 > best_r2:
+        best_r2 = r2
+        best_degree = degree
+        best_coeffs = coeffs
+
+# Graficar mejor ajuste
+x_continuous = np.linspace(min(input_sizes), max(input_sizes), 100)
+best_poly = np.poly1d(best_coeffs)
+plt.plot(x_continuous, best_poly(x_continuous), color='red', 
+         label=f'Ajuste polinomial (grado {best_degree})')
+
+plt.xlabel('Tamaño de entrada (n)')
+plt.ylabel('Tiempo de ejecución (segundos)')
+plt.title('Análisis de Tiempo de Ejecución')
+plt.legend()
+plt.grid(True)
+
+# Gráfico de valores Fibonacci generados
+plt.subplot(1, 2, 2)
+for i, sequence in enumerate(fibonacci_results):
+    plt.plot(range(len(sequence)), sequence, marker='o', 
+             label=f'n={i+1}', alpha=0.7)
+plt.xlabel('Índice en la secuencia')
+plt.ylabel('Valor de Fibonacci')
+plt.title('Secuencias de Fibonacci Generadas')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True)
+
+plt.tight_layout()
+plt.savefig('gráfica_mejor_regresión.png', bbox_inches='tight')
+
+print("\nResultados del análisis:")
+print(f"Mejor grado polinomial: {best_degree}")
+print(f"R² Score: {best_r2:.4f}")
+print(f"Coeficientes del polinomio: {best_coeffs}")
+
+# Determinar complejidad aproximada
+if best_degree == 3:
+    print("El análisis sugiere una complejidad O(n³)")
+elif best_degree == 2:
+    print("El análisis sugiere una complejidad O(n²)")
+else:
+    print("El análisis sugiere una complejidad O(n)")
+
+# [Análisis y Visualización]
+plt.figure(figsize=(12, 6))
+
+# Gráfico de dispersión y regresiones
+plt.subplot(1, 2, 1)
+plt.scatter(input_sizes, execution_times, color='blue', label='Tiempos medidos')
+
+# Definir colores para cada grado
+colors = ['red', 'green', 'purple']
+degrees = [1, 2, 3]
+
+# Calcular y graficar todas las regresiones
+r2_scores = []
+for degree, color in zip(degrees, colors):
+    # Calcular coeficientes del polinomio
+    coeffs = np.polyfit(input_sizes, execution_times, degree)
+    poly = np.poly1d(coeffs)
+    
+    # Calcular R²
+    y_pred = poly(input_sizes)
+    r2 = 1 - (np.sum((execution_times - y_pred) ** 2) / 
+              np.sum((execution_times - np.mean(execution_times)) ** 2))
+    r2_scores.append(r2)
+    
+    # Graficar regresión
+    x_continuous = np.linspace(min(input_sizes), max(input_sizes), 100)
+    plt.plot(x_continuous, poly(x_continuous), color=color, 
+             label=f'Grado {degree} (R² = {r2:.4f})')
+
+plt.xlabel('Tamaño de entrada (n)')
+plt.ylabel('Tiempo de ejecución (segundos)')
+plt.title('Análisis de Tiempo de Ejecución')
+plt.legend()
+plt.grid(True)
+
+# Gráfico de valores Fibonacci generados
+plt.subplot(1, 2, 2)
+for i, sequence in enumerate(fibonacci_results):
+    plt.plot(range(len(sequence)), sequence, marker='o', 
+             label=f'n={i+1}', alpha=0.7)
+plt.xlabel('Índice en la secuencia')
+plt.ylabel('Valor de Fibonacci')
+plt.title('Secuencias de Fibonacci Generadas')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True)
+
+plt.tight_layout()
+plt.savefig('gráfica_con_todas_regresiones.png', bbox_inches='tight')
